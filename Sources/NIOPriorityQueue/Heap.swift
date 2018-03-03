@@ -18,6 +18,7 @@ import Darwin
 import Glibc
 #endif
 
+@available(*, deprecated, "Type meant for internal use, do not use")
 public enum HeapType {
     case maxHeap
     case minHeap
@@ -28,17 +29,31 @@ public enum HeapType {
             return (>)
         case .minHeap:
             return (<)
-        }
     }
 }
 
 internal struct Heap<Element: Comparable> {
+
+    internal enum HeapType {
+        case maxHeap
+        case minHeap
+
+        var comparator: (Element, Element) -> Bool {
+            switch self {
+            case .maxHeap:
+                return (>)
+            case .minHeap:
+                return (<)
+            }
+        }
+    }
+
     internal let type: HeapType
     internal private(set) var storage: ContiguousArray<Element> = []
     private let comparator: (Element, Element) -> Bool
 
     internal init?(type: HeapType, storage: ContiguousArray<Element>) {
-        self.comparator = type.comparator(type: Element.self)
+        self.comparator = type.comparator
         self.storage = storage
         self.type = type
         if !self.checkHeapProperty() {
@@ -47,7 +62,7 @@ internal struct Heap<Element: Comparable> {
     }
 
     public init(type: HeapType) {
-        self.comparator = type.comparator(type: Element.self)
+        self.comparator = type.comparator
         self.type = type
     }
 
